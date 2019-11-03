@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+import sys
+import argparse
+import inquirer
+
+from bluedesk import DeskManager, command_factory
+
+def action_connect():
+
+    manager = DeskManager()
+
+    configured_addr = manager.config.get("addr")
+
+    if configured_addr:
+        confirmed = inquirer.confirm(
+            "Found configured device '%s' would you like to overwrite ?" % configured_addr)
+        if confirmed is not True:
+            sys.exit(1)
+    else:
+        pass
+
+    print("Scanning ...")
+
+    devices = manager.scan_devices()
+
+    choices = [
+        ("%s [%s]" %(device.getValueText(9), device.addr), device.addr,) for device in devices
+    ]
+
+    questions = [
+        inquirer.List("device_addr", message="Choice device", choices=choices)
+    ]
+
+    answer = inquirer.prompt(questions)
+
+    manager.connect(answer.get("device_addr"))
+
+    manager.config.set("addr", answer.get("device_addr"))
+
+    print("Device: %s connected successfully." % answer.get("device_addr"))
+
+def action_disconnect():
+    manager = DeskManager()
+    connected_device_addr = manager.config.get("addr")
+
+    if not connected_device_addr:
+        print("No device connected.")
+        sys.exit(1)
+
+    manager.config.set("addr", "")
+
+    print("Device: %s" % connected_device_addr)
+
+ACTIONS = {
+    "connect": action_connect,
+    "disconnect": action_disconnect
+}
+
+def error(message):
+    raise SystemExit()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Controls lower energy actuator systems (office desks) via bluetooth.")
+    parser.error = error
+    subparser = parser.add_subparsers()
+
+    parser_connect = subparser.add_parser("connect")
+    parser_connect.set_defaults(action="connect")
+    parser_connect.add_argument("--addr", required=False)
+
+    parser_disconnect = subparser.add_parser("disconnect")
+    parser_disconnect.set_defaults(action="disconnect")
+
+    manager = DeskManager()
+    configured_addr = manager.config.get("addr")
+    command_handler = None
+
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        args = None
+        pass
+
+    if not configured_addr:
+        raise Exception("Invalid configured address:" + configured_addr)
+
+    if args is None:
+        manager.connect(configured_addr)
+        command_handler = command_factory(manager.desk)
+        command_handler.init(subparser)
+        args = parser.parse_args()
+
+    if hasattr(args, "action") and args.action not in ACTIONS and command_handler is not None:
+        command_handler.handle(args)
+    elif hasattr(args, "action"):
+        action = ACTIONS.get(args.action)
+        action()
+    else:
+        parser.print_help()
