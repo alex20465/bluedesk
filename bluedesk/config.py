@@ -35,6 +35,14 @@ class Config:
     def get(self, name, section="default"):
         return self._config[section].get(name, None)
 
+    def has(self, name, section="default"):
+        value = self.get(name, section).strip()
+
+        if not value or value == "":
+            return False
+        else:
+            return True
+
     def __save(self):
         with open(self.filepath, 'w') as configfile:
             self._config.write(configfile)

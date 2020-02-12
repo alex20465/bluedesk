@@ -13,7 +13,7 @@ else:
   long_description = ""
 
 setup(name='Bluedesk',
-      version='1.8',
+      version='1.9',
       scripts=[ 'bin/bluedesk' ],
       description='CLI tool to control lower energy actuator systems (office desks) through bluetooth.',
       long_description=long_description,

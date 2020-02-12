@@ -73,7 +73,7 @@ if __name__ == "__main__":
     parser_disconnect.set_defaults(action="disconnect")
 
     manager = DeskManager()
-    configured_addr = manager.config.get("addr")
+    has_addr = manager.config.get("addr")
     command_handler = None
 
     try:
@@ -82,19 +82,19 @@ if __name__ == "__main__":
         args = None
         pass
 
-    if not configured_addr:
-        raise Exception("Invalid configured address:" + configured_addr)
-
     if args is None:
-        manager.connect(configured_addr)
+        manager.connect(manager.config.get("addr"))
         command_handler = command_factory(manager.desk)
         command_handler.init(subparser)
         args = parser.parse_args()
 
     if hasattr(args, "action") and args.action not in ACTIONS and command_handler is not None:
+        # connected, perform action on device
         command_handler.handle(args)
     elif hasattr(args, "action"):
+        # not connected, only initial actions are available
         action = ACTIONS.get(args.action)
         action()
     else:
+        # no action entered
         parser.print_help()
