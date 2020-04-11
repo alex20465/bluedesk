@@ -1,5 +1,9 @@
 # Bluedesk
 
+THIS PROJECT IS NOT MAINTAINED ANYMORE SINCE THERE IS A NEW REWRITE IN BASED OF NODE.JS, CHECKOUT THE REPOSITORY: [DESKBLUEZ](https://github.com/alex20465/deskbluez)
+
+
+
 Connects to a low energy actuator system via bluetooth and allows remote control via command line or internal managed interface.
 
 ## Supported and Tested Desks
